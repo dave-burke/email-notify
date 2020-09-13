@@ -27,6 +27,7 @@ provider:
   environment:
     EMAIL_SENDER: ${file(env.${self:provider.stage}.yaml):EMAIL_SENDER}
     EMAIL_RECIPIENT: ${file(env.${self:provider.stage}.yaml):EMAIL_RECIPIENT}
+    PASSPHRASE: ${file(env.${self:provider.stage}.yaml):PASSPHRASE}
   iamRoleStatements:
     - Effect: "Allow"
       Action:

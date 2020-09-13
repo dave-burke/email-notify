@@ -3,7 +3,7 @@
 const aws = require('aws-sdk');
 const ses = new aws.SES({region: 'us-east-1'});
 
-const { EMAIL_SENDER, EMAIL_RECIPIENT } = process.env;
+const { EMAIL_SENDER, EMAIL_RECIPIENT, PASSPHRASE } = process.env;
 
 function sendEmail(recipient, subject, text) {
   const params = {
@@ -31,7 +31,11 @@ function sendEmail(recipient, subject, text) {
 }
 
 module.exports.notify = async event => {
-  const { subject, body } = event;
+  const { subject, body, passphrase } = event;
+  if(passphrase !== PASSPHRASE) {
+    console.log(`Bad passphrase. Expected "${PASSPHRASE}" but got "${passphrase}"`);
+    return { statusCode: 403 };
+  }
   if(!subject || !body) {
     return {
       statusCode: 400,
