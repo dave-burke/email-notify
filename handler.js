@@ -30,17 +30,34 @@ function sendEmail(recipient, subject, text) {
   });
 }
 
+function failure(statusCode, bodyContent) {
+  console.error(bodyContent);
+  if(typeof bodyContent === 'String') {
+    return {
+      statusCode,
+      body: JSON.stringify({
+        message: bodyContent,
+      }, null, 2),
+    }
+  } else {
+    return {
+      statusCode,
+      body: JSON.stringify(bodyContent, null, 2),
+    }
+  }
+}
+
 module.exports.notify = async event => {
-  const { subject, body, passphrase } = event;
+  if(!event.body) {
+    return failure(400, 'Expected a body on the request');
+  }
+  const { subject, body, passphrase } = event.body;
   if(passphrase !== PASSPHRASE) {
-    console.log(`Bad passphrase. Expected "${PASSPHRASE}" but got "${passphrase}"`);
-    return { statusCode: 403 };
+    console.log(`Bad passphrase: "${passphrase}"`);
+    return failure(403);
   }
   if(!subject || !body) {
-    return {
-      statusCode: 400,
-      body: `Expected { subject, body } but got ${JSON.stringify(event)}`,
-    }
+    return failure(400, 'Expected { subject, body } on the request');
   }
   try {
     const emailResult = await sendEmail(EMAIL_RECIPIENT, subject, body);
@@ -49,11 +66,7 @@ module.exports.notify = async event => {
       body: JSON.stringify(emailResult, null, 2),
     };
   } catch(err) {
-    console.log(err);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: err, input: event }, null, 2),
-    };
+    return failure(500, { error: err, input: event });
   }
 };
 
