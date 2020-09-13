@@ -31,8 +31,15 @@ function sendEmail(recipient, subject, text) {
 }
 
 module.exports.notify = async event => {
+  const { subject, body } = event;
+  if(!subject || !body) {
+    return {
+      statusCode: 400,
+      body: `Expected { subject, body } but got ${JSON.stringify(event)}`,
+    }
+  }
   try {
-    const emailResult = await sendEmail(EMAIL_RECIPIENT, 'Test subject', 'Test body');
+    const emailResult = await sendEmail(EMAIL_RECIPIENT, subject, body);
     return {
       statusCode: 200,
       body: JSON.stringify(emailResult, null, 2),
@@ -45,3 +52,4 @@ module.exports.notify = async event => {
     };
   }
 };
+
