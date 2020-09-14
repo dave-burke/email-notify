@@ -53,7 +53,9 @@ module.exports.notify = async event => {
   if(!event.body) {
     return failure(400, 'Expected a body on the request', event);
   }
-  const { subject, body, passphrase } = event.body;
+
+  const { subject, body, passphrase } = JSON.parse(event.body);
+
   if(passphrase !== PASSPHRASE) {
     console.log(`Bad passphrase: "${passphrase}"`);
     return failure(403, null, event);
