@@ -32,7 +32,9 @@ function sendEmail(recipient, subject, text) {
 
 function failure(statusCode, bodyContent) {
   console.error(bodyContent);
-  if(typeof bodyContent === 'String') {
+  if(typeof bodyContent === 'undefined') {
+    return { statusCode };
+  } else if(typeof bodyContent === 'String') {
     return {
       statusCode,
       body: JSON.stringify({
