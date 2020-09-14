@@ -1,0 +1,24 @@
+{
+  "name": "email-notify",
+  "version": "1.0.0",
+  "description": "Email notification service",
+  "main": "handler.js",
+  "dependencies": {
+    "aws-sdk": "^2.751.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "deploy": "sls deploy --aws-profile serverless",
+    "test": "bin/test_local.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dave-burke/email-notify.git"
+  },
+  "author": "Dave Burke",
+  "license": "AGPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/dave-burke/email-notify/issues"
+  },
+  "homepage": "https://github.com/dave-burke/email-notify#readme"
+}
