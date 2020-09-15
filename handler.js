@@ -49,12 +49,22 @@ function failure(statusCode, bodyContent, logMessage) {
   }
 }
 
+function rejectMissingAuth() {
+  return {
+    statusCode: 401,
+    headers: [ "WWW-Authenticate: Basic" ]
+  }
+}
+
 module.exports.notify = async event => {
   if(!event.body) {
     return failure(400, 'Expected a body on the request', event);
   }
 
-  // TODO implement BASIC AUTH instead
+  if(!event.headers || !event.headers.authorization) {
+    return rejectMissingAuth();
+  }
+
   const { subject, body, passphrase } = JSON.parse(event.body);
 
   if(passphrase !== PASSPHRASE) {
