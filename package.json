@@ -9,7 +9,8 @@
   "devDependencies": {},
   "scripts": {
     "deploy": "sls deploy --aws-profile serverless",
-    "test": "bin/test_local.sh"
+    "test": "bin/test_local.sh",
+    "integTest": "sls test --aws-profile serverless"
   },
   "repository": {
     "type": "git",
