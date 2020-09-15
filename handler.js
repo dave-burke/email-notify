@@ -54,6 +54,7 @@ module.exports.notify = async event => {
     return failure(400, 'Expected a body on the request', event);
   }
 
+  // TODO implement BASIC AUTH instead
   const { subject, body, passphrase } = JSON.parse(event.body);
 
   if(passphrase !== PASSPHRASE) {
