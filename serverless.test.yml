@@ -1,0 +1,11 @@
+---
+- name: Sends a notification email
+  endpoint: { function: notify }
+  request:
+    headers: [ "Content-Type: application/json" ]
+    body:
+      subject: "notify integration test"
+      body: "test from serverless.test.yml"
+      passphrase: "test"
+  response: true
+
