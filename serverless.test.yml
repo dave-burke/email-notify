@@ -10,3 +10,48 @@
       body: "test from serverless.test.yml"
   response: true
 
+- name: Rejects requests with no Authorization header
+  endpoint: { function: notify }
+  request:
+    headers:
+      "Content-Type": "application/json"
+    body:
+      subject: "notify integration test"
+      body: "test from serverless.test.yml"
+  response:
+    statusCode: 404
+
+- name: Rejects requests with invalid auth header
+  endpoint: { function: notify }
+  request:
+    headers:
+      "Content-Type": "application/json"
+      "Authorization": "Basic Zm9vOmJhcg=="
+    body:
+      subject: "notify integration test"
+      body: "test from serverless.test.yml"
+  response:
+    statusCode: 404
+
+- name: Rejects requests with no subject
+  endpoint: { function: notify }
+  request:
+    headers:
+      "Content-Type": "application/json"
+      "Authorization": "Basic dXNlcjp0ZXN0"
+    body:
+      body: "test from serverless.test.yml"
+  response:
+    statusCode: 404
+
+- name: Rejects requests with no body
+  endpoint: { function: notify }
+  request:
+    headers:
+      "Content-Type": "application/json"
+      "Authorization": "Basic dXNlcjp0ZXN0"
+    body:
+      subject: "notify integration test"
+  response:
+    statusCode: 404
+
