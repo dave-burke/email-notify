@@ -30,34 +30,13 @@ function sendEmail(recipient, subject, text) {
   });
 }
 
-function failure(statusCode, bodyContent, logMessage) {
-  console.error(logMessage);
-  if(!bodyContent) {
-    return { statusCode };
-  } else if(typeof bodyContent === 'String') {
-    return {
-      statusCode,
-      body: JSON.stringify({
-        message: bodyContent,
-      }, null, 2),
-    }
-  } else {
-    return {
-      statusCode,
-      body: JSON.stringify(bodyContent, null, 2),
-    }
-  }
-}
-
-function rejectMissingAuth(event) {
-  console.log('Expected "Authorization" header');
-  console.log(event.headers);
-  // It is standard to return a WWW-Authenticate header, but this service
-  // is just for me. I know how to structure the request, so why help
-  // anyone who doesn't?
-  return {
-    statusCode: 404
-  };
+function Failure(message, event) {
+  console.log(message);
+  console.log(event);
+  // A typical web service would provide more useful and specific errors, but
+  // this service is just for me. I know how to structure the request, so why
+  // help anyone who doesn't?
+  this.statusCode = 404;
 }
 
 function parseBasicAuthHeader(rawHeader) {
@@ -71,22 +50,22 @@ function parseBasicAuthHeader(rawHeader) {
 
 module.exports.notify = async event => {
   if(!event.headers || !event.headers.Authorization) {
-    return rejectMissingAuth(event);
+    return new Failure('Expected "Authorization" header', event);
   }
 
   const [username, passphrase] = parseBasicAuthHeader(event.headers.Authorization);
 
   if(username !== USERNAME && passphrase !== PASSPHRASE) {
-    return failure(403, 'Bad credentials', event);
+    return new Failure('Bad credentials', event);
   }
 
   if(!event.body) {
-    return failure(400, 'Expected a body on the request', event);
+    return new Failure('Expected a body on the request', event);
   }
 
   const { subject, body } = JSON.parse(event.body);
   if(!subject || !body) {
-    return failure(400, 'Expected { subject, body } on the request', event);
+    return new Failure('Expected { subject, body } on the request', event);
   }
   try {
     const emailResult = await sendEmail(EMAIL_RECIPIENT, subject, body);
@@ -95,7 +74,7 @@ module.exports.notify = async event => {
       body: JSON.stringify(emailResult, null, 2),
     };
   } catch(err) {
-    return failure(500, err, event );
+    return new Failure(err, event);
   }
 };
 
