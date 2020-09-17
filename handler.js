@@ -3,7 +3,7 @@
 const aws = require('aws-sdk');
 const ses = new aws.SES({region: 'us-east-1'});
 
-const { EMAIL_SENDER, EMAIL_RECIPIENT, PASSPHRASE } = process.env;
+const { EMAIL_SENDER, EMAIL_RECIPIENT, USERNAME, PASSPHRASE } = process.env;
 
 function sendEmail(recipient, subject, text) {
   const params = {
@@ -30,39 +30,42 @@ function sendEmail(recipient, subject, text) {
   });
 }
 
-function failure(statusCode, bodyContent, logMessage) {
-  console.error(logMessage);
-  if(!bodyContent) {
-    return { statusCode };
-  } else if(typeof bodyContent === 'String') {
-    return {
-      statusCode,
-      body: JSON.stringify({
-        message: bodyContent,
-      }, null, 2),
-    }
-  } else {
-    return {
-      statusCode,
-      body: JSON.stringify(bodyContent, null, 2),
-    }
-  }
+function Failure(message, event) {
+  console.log(message);
+  console.log(event);
+  // A typical web service would provide more useful and specific errors, but
+  // this service is just for me. I know how to structure the request, so why
+  // help anyone who doesn't?
+  this.statusCode = 404;
+}
+
+function parseBasicAuthHeader(rawHeader) {
+  // Format is "Basic [base64 encoded 'username:password']"
+  const encodedToken = rawHeader.substring(6);
+  // Node does not implement `btoa()`
+  const decodedToken = Buffer.from(encodedToken, 'base64').toString();
+  const credentials = decodedToken.split(':'); // [username, password]
+  return credentials;
 }
 
 module.exports.notify = async event => {
+  if(!event.headers || !event.headers.Authorization) {
+    return new Failure('Expected "Authorization" header', event);
+  }
+
+  const [username, passphrase] = parseBasicAuthHeader(event.headers.Authorization);
+
+  if(username !== USERNAME && passphrase !== PASSPHRASE) {
+    return new Failure('Bad credentials', event);
+  }
+
   if(!event.body) {
-    return failure(400, 'Expected a body on the request', event);
+    return new Failure('Expected a body on the request', event);
   }
 
-  // TODO implement BASIC AUTH instead
-  const { subject, body, passphrase } = JSON.parse(event.body);
-
-  if(passphrase !== PASSPHRASE) {
-    console.log(`Bad passphrase: "${passphrase}"`);
-    return failure(403, null, event);
-  }
+  const { subject, body } = JSON.parse(event.body);
   if(!subject || !body) {
-    return failure(400, 'Expected { subject, body } on the request', event);
+    return new Failure('Expected { subject, body } on the request', event);
   }
   try {
     const emailResult = await sendEmail(EMAIL_RECIPIENT, subject, body);
@@ -71,7 +74,7 @@ module.exports.notify = async event => {
       body: JSON.stringify(emailResult, null, 2),
     };
   } catch(err) {
-    return failure(500, err, event );
+    return new Failure(err, event);
   }
 };
 
