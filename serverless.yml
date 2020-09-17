@@ -25,9 +25,10 @@ provider:
   runtime: nodejs12.x
   region: us-east-1
   environment:
-    EMAIL_SENDER: ${file(env.${self:provider.stage}.yaml):EMAIL_SENDER}
-    EMAIL_RECIPIENT: ${file(env.${self:provider.stage}.yaml):EMAIL_RECIPIENT}
-    PASSPHRASE: ${file(env.${self:provider.stage}.yaml):PASSPHRASE}
+    EMAIL_SENDER: ${file(./env.${opt:stage, self:provider.stage}.yml):EMAIL_SENDER}
+    EMAIL_RECIPIENT: ${file(./env.${opt:stage, self:provider.stage}.yml):EMAIL_RECIPIENT}
+    USERNAME: ${file(./env.${opt:stage, self:provider.stage}.yml):USERNAME}
+    PASSPHRASE: ${file(./env.${opt:stage, self:provider.stage}.yml):PASSPHRASE}
   iamRoleStatements:
     - Effect: "Allow"
       Action:

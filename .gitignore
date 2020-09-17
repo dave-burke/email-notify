@@ -6,5 +6,5 @@ jspm_packages
 .serverless
 
 # Private data
-env.*.yaml
+env.prod.yml
 
