@@ -2,10 +2,11 @@
 - name: Sends a notification email
   endpoint: { function: notify }
   request:
-    headers: [ "Content-Type: application/json" ]
+    headers:
+      "Content-Type": "application/json"
+      "Authorization": "Basic dXNlcjp0ZXN0"
     body:
       subject: "notify integration test"
       body: "test from serverless.test.yml"
-      passphrase: "test"
   response: true
 

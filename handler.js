@@ -3,7 +3,7 @@
 const aws = require('aws-sdk');
 const ses = new aws.SES({region: 'us-east-1'});
 
-const { EMAIL_SENDER, EMAIL_RECIPIENT, PASSPHRASE } = process.env;
+const { EMAIL_SENDER, EMAIL_RECIPIENT, USERNAME, PASSPHRASE } = process.env;
 
 function sendEmail(recipient, subject, text) {
   const params = {
@@ -49,28 +49,42 @@ function failure(statusCode, bodyContent, logMessage) {
   }
 }
 
-function rejectMissingAuth() {
+function rejectMissingAuth(event) {
+  console.log('Expected "Authorization" header');
+  console.log(event.headers);
+  // It is standard to return a WWW-Authenticate header, but this service
+  // is just for me. I know how to structure the request, so why help
+  // anyone who doesn't?
   return {
-    statusCode: 401,
-    headers: [ "WWW-Authenticate: Basic" ]
-  }
+    statusCode: 404
+  };
+}
+
+function parseBasicAuthHeader(rawHeader) {
+  // Format is "Basic [base64 encoded 'username:password']"
+  const encodedToken = rawHeader.substring(6);
+  // Node does not implement `btoa()`
+  const decodedToken = Buffer.from(encodedToken, 'base64').toString();
+  const credentials = decodedToken.split(':'); // [username, password]
+  return credentials;
 }
 
 module.exports.notify = async event => {
+  if(!event.headers || !event.headers.Authorization) {
+    return rejectMissingAuth(event);
+  }
+
+  const [username, passphrase] = parseBasicAuthHeader(event.headers.Authorization);
+
+  if(username !== USERNAME && passphrase !== PASSPHRASE) {
+    return failure(403, 'Bad credentials', event);
+  }
+
   if(!event.body) {
     return failure(400, 'Expected a body on the request', event);
   }
 
-  if(!event.headers || !event.headers.authorization) {
-    return rejectMissingAuth();
-  }
-
-  const { subject, body, passphrase } = JSON.parse(event.body);
-
-  if(passphrase !== PASSPHRASE) {
-    console.log(`Bad passphrase: "${passphrase}"`);
-    return failure(403, null, event);
-  }
+  const { subject, body } = JSON.parse(event.body);
   if(!subject || !body) {
     return failure(400, 'Expected { subject, body } on the request', event);
   }
